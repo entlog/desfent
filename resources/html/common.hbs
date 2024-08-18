@@ -1,0 +1,17 @@
+{{#*inline "hierarchy"}}
+   Here the hierarchy
+{{/inline}}
+
+{{#*inline "nature"}}
+   {{#if (eq 'ApexClass' root.nature)}}
+      {{#if root.isClass}}
+         Apex Class
+      {{/if}}
+      {{#unless root.isClass}}
+         Apex Interface
+      {{/unless}}
+   {{/if}}
+   {{#if (eq 'ApexEnum' root.nature)}}
+      Apex Enum
+   {{/if}}
+{{/inline}}

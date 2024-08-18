@@ -34,7 +34,7 @@ export default abstract class IR {
    protected _name: string;
    protected _nature: string;
    private root: IRGroup | undefined;
-   private valid: boolean = true;
+   private _valid: boolean = true;
    private problems: IRParsingProblem[] = [];
 
    constructor(name: string, nature: string) {
@@ -49,15 +49,13 @@ export default abstract class IR {
       return this._nature;
    }
 
-   public isValid(): boolean {
-      return this.valid;
-   }
-   public setValid(valid: boolean): void {
-      this.valid = valid;
+   public get valid(): boolean {
+      return this._valid;
    }
 
    public addParsingProblem(message: string, line: number, offset: number, snapshot?: string): void {
       this.problems.push(new IRParsingProblem(message, line, offset, snapshot));
+      this._valid = false;
    }
 
    public getErrors(): IRParsingProblem[] {

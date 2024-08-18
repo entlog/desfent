@@ -9,6 +9,7 @@ const NATURE_VALUE = 'ApexEnumValue';
 export class ApexEnumValueIR extends ApexIR {
    public jdComment: JDCommentIR | undefined;
    public comments: CommentIR[] = [];
+   
    constructor(name: string) {
       super(name, NATURE_VALUE);
    }
@@ -18,7 +19,7 @@ export class ApexEnumValueIR extends ApexIR {
 }
 export default class ApexEnumIR extends ApexIR {
    public values: ApexEnumValueIR[] = [];
-
+   public accessModifier:string|undefined;
    public jdComment: JDCommentIR | undefined;
    public comments: CommentIR[] = [];
 

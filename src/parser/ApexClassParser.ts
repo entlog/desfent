@@ -681,6 +681,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
             this.nextToken();
             token = this.lookAhead();
          }
+         this.log(`Access modifier is: ${accessModifier}`);
 
          if (WORD_ENUM !== token.ltext) {
             this.log(`Desisted enum on token: ${token}`);
@@ -696,6 +697,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
          let ret: ApexEnumIR = new ApexEnumIR(token.text);
          ret.jdComment = jdComment;
          ret.comments = comments;
+         ret.accessModifier = accessModifier;
          this.nextToken();
          token = this.lookAhead();
          if (token.type !== TOKENTYPE_CODE_CBRACKET_START) {
@@ -706,6 +708,8 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
          let valueJDComment: JDCommentIR | undefined;
          let valueComments: CommentIR[] = [];
          while (token.type !== TOKENTYPE_CODE_CBRACKET_END) {
+            valueJDComment = undefined;
+            valueComments = [];
             while (true) {
                if (this.attempt('enumValueJDComment', this.doJDComment)) {
                   valueJDComment = this.doJDComment();
@@ -730,6 +734,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
                // Only store one of them
                enumValue.jdComment = valueJDComment;
                enumValue.comments = valueComments;
+               
                ret.values.push(enumValue);
                this.nextToken();
                token = this.lookAhead();

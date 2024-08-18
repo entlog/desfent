@@ -44,7 +44,7 @@ export abstract class Parser<T extends Token, Z extends IR> {
    // Contexts that log info
    protected verboseContext: Set<ParseContext> = new Set<ParseContext>([]);
    // If set to true it will also log  info for the attempts (not only on confirmed branches)
-   private logAttempting: boolean = true;
+   private logAttempting: boolean = false;
 
    private tokens: T[] = [];
    private tokenIndex: number = 0;

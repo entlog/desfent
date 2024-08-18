@@ -18,3 +18,7 @@ Include here the name of the file to be analyzed
 
 - <%= config.bin %> <%= command.id %>
 
+
+# flags.out.summary
+
+Output directory for documentation.

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <link href="css/common.css" rel="stylesheet" type="text/css"/>
+      <link href="css/doc.css" rel="stylesheet" type="text/css"/>
+   </head>
+   <body class="apexclass mdinfo hideprivate">
+      <div class="header">
+         <div class="logo"></div>
+         <div class="text">Welcome to the ultimate tool in Salesforce Documentation</div>
+         <div class="generated">Generated on ${dt}</div>
+      </div>
+      <h1 class="objectName"> {{>nature}} - {{root.name}}</h1>
+      <div class="hierarchy">
+         <!-- TODO: Hierarchy -->
+         {{> hierarchy}}
+      </div>
+      <div class="separator"></div>
+      <section class="overview">
+		   <div class="definition">
+            <!-- TODO: Access modifiers -->
+            {{root.accessModifier}}
+            {{#if root.isAbstract}}abstract{{/if}}
+            {{#if root.isVirtual}}virtual{{/if}}
+            {{#if root.isClass}}
+               {{#if root.isWithSharing}}with{{/if}}
+               {{#unless root.isWithSharing}}without{{/unless}}
+               sharing class
+            {{else}}
+               interface
+            {{/if}}
+            <b>{{root.name}}</b>
+            {{#if root.baseClass}}
+               <!-- TODO: Search if other irs exists and add link -->
+               extends {{generateTypeString root.baseClass}}
+            {{/if}}
+            {{#unless (empty root.interfaces)}}
+               implements&nbsp;
+               <!-- TODO: Search if exists interface and add link -->
+               {{~#each root.interfaces~}}
+                  {{#unless (eq @index 0)}}, {{/unless}}{{generateTypeString this}}
+               {{~/each~}}
+            {{/unless}}
+         </div>
+         <div class="description">
+            {{#if root.jdComment}}
+               <div class="text">
+                  {{root.jdComment.text}}
+               </div>
+               <div class="annotations">
+                  {{#each root.jdComment.annotations}}
+                     <div class="annotation">
+                        <span class="annlabel">
+                           <!-- TODO: Translate known annotations -->
+                           {{~#this~}}
+                              {{this.name}}&nbsp;{{#if this.param}}{{this.param}}{{/if}}:
+                           {{/this}}
+                        </span>
+                        <span class="anndesc">{{this.explanation}}</span>
+                     </div>
+
+                  {{/each}}
+               </div>
+            {{/if}}
+         </div>
+         <div class="fieldSummary" id="fieldSummary">
+   			<h3>Field Summary</h3>
+            <div class="fields">
+               <table class="sticky">
+                  <tbody>
+                     <tr>
+                        <th>Modifier and Type</th>
+                        <th>Field and Description</th>
+                     </tr>
+                     {{#if root.attributes}}
+                        {{#each root.attributes}}
+                           <tr class="{{this.accessModifier}}">
+                              <td>
+                                 <code>
+                                    {{this.accessModifier}}
+                                    {{#if this.isFinal}}final{{/if}}
+                                    {{#if this.isStatic}}static{{/if}}
+                                    {{generateTypeString this.type}}
+                                 </code>
+
+                              </td>
+                              <td>
+                                 <a href="#{{this.name}}"><code>{{this.name}}</code></a>
+                                 {{#if this.jdComment}}
+                                    <span>{{this.jdComment.text}}</span>
+                                 {{/if}}
+                              </td>
+                           </tr>
+                        {{/each}}
+                     {{/if}}
+                  </tbody>
+				   </table>
+			   </div>
+         </div> <!-- Field summary -->
+         <div class="methodSummary" id="methodSummary">
+            <h3>Method Summary</h3>
+            <!-- TODO: Add constructor -->
+            <div class="methods">
+               <table class="sticky">
+                  <tbody>
+                     <tr>
+                        <th>Modifier and Type</th>
+                        <th>Method and Description</th>
+                     </tr>
+                     {{#each root.methods}}
+                        <tr class="${met.accessModifier}">
+									<td>
+										<code>
+                                 {{this.accessModifier}}
+                                 {{generateTypeString this.returnType}}
+                              </code>
+                           </td>
+                           <td>
+                              <a href="#{{this.name}}"><code>{{this.name}}</code></a>
+                              <code>(
+                                 {{#with this as | method | }}
+                                    {{~#each method.parameters~}}
+                                       {{#unless (eq @index 0)}}, {{/unless}}{{generateTypeString this.type}} {{this.name}}
+                                    {{~/each~}}
+                                 {{/with}}
+                              )</code>
+                              <span>{{this.jdComment.text}}</span>
+                           </td>
+                        </tr>
+                     {{/each}}
+                  <tbody>
+               </table>
+            </div>
+         </div>
+      </section>
+      <section class="detail">
+		<div class="fieldDetail" id="fieldDetail">
+         <h3>Field Detail</h3>
+         {{#each root.attributes}}
+            {{#with this as | attribute | }}
+               <div  class="{{this.accessModifier}}">
+                  <h4 id="{{attribute.name}}">{{attribute.name}}</h4>
+                  <div class="definition">
+                     {{#each attribute.annotations}}
+                        <div class="annotation">
+                           {{this.name}}
+                           {{#unless (empty this.parameters)}}
+                              (
+                                 {{~#each this.parameters~}}
+                                    {{#unless (eq @index 0)}}, {{/unless}}
+                                    {{this.name}}
+                                    {{#if this.value}}
+                                       ={{this.value}}
+                                    {{/if}}
+                                 {{~/each~}}
+                              )
+                           {{/unless}}
+                        </div>
+                        {{attribute.accessModifier}}
+                        {{#if attribute.isStatic}}static{{/if}}
+                        {{#if attribute.isFinal}}final{{/if}}
+                        {{generateTypeString attribute.type}}
+                        {{attribute.name}}
+                     {{/each}}
+                  </div>  
+                  <div class="comment">
+                     {{#if attribute.jdComment}}
+                        {{attribute.jdComment.text}}
+                     {{else}}
+                        No description
+                     {{/if}}
+                  </div>
+                  <div class="annotations"><!-- 213 -->
+                     {{#if attribute.jdComment}}
+                        {{#each (filterJDAnnotations attribute.jdComment undefined '["@param", "@return"]') }}
+                           <div class="annotation">
+                              <label>{{this.name}}</label>
+                           </div>
+                        {{/each}}
+                     {{/if}}
+                  </div>
+               </div> 
+            {{/with}}
+         {{/each}}
+      </div>
+      <div class="methodDetail" id="methodDetail"> <!-- 226 -->
+			<h3>Method Detail</h3>
+         {{#each root.methods}}
+            <div  class="{{this.accessModifier}}">
+               <h4 id="{{this.name}}">{{this.name}}</h4>
+               <div class="definition">
+                  {{#each this.annotations}}
+                     <div class="annotation">
+                        {{this.name}}
+                        {{#unless (empty this.parameters)}}
+                           (
+                              {{~#each this.parameters~}}
+                                 {{#unless (eq @index 0)}}, {{/unless}}
+                                 {{this.name}}
+                                 {{#if this.value}}
+                                    ={{this.value}}
+                                 {{/if}}
+                              {{~/each~}}
+                           )
+                        {{/unless}}
+                     </div>
+                  {{/each}}
+                  {{this.accessModifier}}
+                  {{generateTypeString this.returnType}}
+                  {{this.name}}(
+                     {{~#each this.parameters~}}
+                        {{#unless (eq @index 0)}}, {{/unless}}
+                        {{generateTypeString this.type}} {{this.name}}
+                     {{~/each~}}
+                  )
+               </div>
+               <div class="comment"> <!-- 261 -->
+                  {{#if this.jdComment}}
+                     {{this.jdComment.text}}
+                  {{else}}
+                     No description
+                  {{/if}}
+               </div>
+            </div>
+         {{/each}}
+      </div>
+   </body>
+</html>
