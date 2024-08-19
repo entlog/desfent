@@ -1,7 +1,7 @@
 {
-  "name": "desfent",
+  "name": "@entlog/desfent",
   "description": "Tool for code analysis and doc generation",
-  "version": "1.0.0",
+  "version": "1.0.0rc2",
   "dependencies": {
     "@oclif/core": "^4",
     "@salesforce/core": "^7.2.0",
@@ -39,7 +39,7 @@
     "sfdx",
     "sfdx-plugin"
   ],
-  "license": "BSD-3-Clause",
+  "license": "GPL-3.0-or-later",
   "oclif": {
     "commands": "./lib/commands",
     "bin": "sf",
@@ -77,7 +77,8 @@
     "test": "wireit",
     "test:nuts": "nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
     "test:only": "wireit",
-    "version": "oclif readme"
+    "version": "oclif readme",
+    "prepare": "husky install"
   },
   "publishConfig": {
     "access": "public"
@@ -114,7 +115,7 @@
       "output": []
     },
     "lint": {
-      "command": "eslint src test --color --cache --cache-location .eslintcache",
+      "command": "eslint --color --cache --cache-location .eslintcache",
       "files": [
         "src/**/*.ts",
         "test/**/*.ts",
@@ -195,5 +196,21 @@
   },
   "exports": "./lib/index.js",
   "type": "module",
-  "author": "Òscar Hernández Vinyals"
+  "author": "Òscar Hernández Vinyals",
+  "main": "index.js",
+  "bin": {
+    "desfent": "bin/dev.js"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/entlog/desfent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/entlog/desfent/issues"
+  },
+  "homepage": "https://github.com/entlog/desfent#readme"
 }

@@ -14,6 +14,14 @@ File to analyze
 
 Include here the name of the file to be analyzed
 
+# flags.directory.summary
+
+Directory to analyze
+
+# flags.directory.description
+
+Include here the name of the directory to be analyzed
+
 # examples
 
 - <%= config.bin %> <%= command.id %>

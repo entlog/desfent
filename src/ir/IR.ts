@@ -33,7 +33,6 @@ export class IRParsingProblem {
 export default abstract class IR {
    protected _name: string;
    protected _nature: string;
-   private root: IRGroup | undefined;
    private _valid: boolean = true;
    private problems: IRParsingProblem[] = [];
 
@@ -60,13 +59,6 @@ export default abstract class IR {
 
    public getErrors(): IRParsingProblem[] {
       return this.problems;
-   }
-
-   public setRoot(root: IRGroup): void {
-      this.root = root;
-   }
-   public getRoot(): IRGroup | undefined {
-      return this.root;
    }
 
    public toString(): string {

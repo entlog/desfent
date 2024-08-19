@@ -3,10 +3,13 @@ import IR from "../ir/IR.js";
 import fs from 'graceful-fs';
 
 import { fileURLToPath } from 'url';
-import path, { dirname } from 'path';
+import path from 'path';
 import ParserError, { CODE_GENERIC } from "../error/ParserError.js";
 import ApexTypeIR from "../ir/direct/apex/ApexTypeIR.js";
 import { JDCommentIR } from "../ir/direct/apex/JDCommentIR.js";
+import JDCommentAnnotationIR from "../ir/direct/apex/JDCommentAnnotation.js";
+import TreeHelper from "../ir/IRGroup.js";
+import IRGroup from "../ir/IRGroup.js";
 
 const NATURE_2_TEMPLATE = new Map<string, string>([
    ['ApexClass', '../../../resources/html/apexclass.hbs'],
@@ -60,11 +63,15 @@ export default class HtmlFormatter {
          if (typesExcluded) {
             (JSON.parse(typesExcluded) as string[]).forEach(e => excluded.add(e));
          }
-         log(`Executing filterJDAnnotations with ${included.entries()}`);
-         return o.annotations.filter(a => 
+         const ret:JDCommentAnnotationIR[] = o.annotations.filter(a => 
             (included.size == 0 || included.has(a.name)) 
             && (excluded.size == 0 || !excluded.has(a.name)));
-         
+         return ret;
+
+      });
+
+      Handlebars.registerHelper('dt', () => {
+         return new Date().toLocaleString();
       });
    }
    
@@ -80,11 +87,16 @@ export default class HtmlFormatter {
    }
 
    
-   static format(ir:IR, dir:string, log:(message?: string, ...args: any[]) => void):void {
+   static format(ir:IR, group:IRGroup, dir:string, log:(message?: string, ...args: any[]) => void):void {
+      Handlebars.logger.log = (level:number, obj:string) => log(obj);
       const template:string = this.getTemplate(ir.nature);
       let doTemplate:HandlebarsTemplateDelegate = Handlebars.compile(template);
-      let output:string = doTemplate({root: ir}, { allowProtoPropertiesByDefault: true});
-      let filename:string = path.resolve(dir, ir.name + '.html');
-      fs.writeFileSync(filename, output);
+      try {
+         let output:string = doTemplate({root: ir, group}, { allowProtoPropertiesByDefault: true});
+         let filename:string = path.resolve(dir, ir.name + '.html');
+         fs.writeFileSync(filename, output);
+      } catch (e) {
+         log(`ERROR: ${e}`)
+      }
    }
 }

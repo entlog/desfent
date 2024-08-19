@@ -9,7 +9,7 @@
       <div class="header">
          <div class="logo"></div>
          <div class="text">Welcome to the ultimate tool in Salesforce Documentation</div>
-         <div class="generated">Generated on ${dt}</div>
+         <div class="generated">Generated on {{dt}}</div>
       </div>
       <h1 class="objectName"> {{>nature}} - {{root.name}}</h1>
       <div class="hierarchy">
@@ -176,6 +176,7 @@
                         {{#each (filterJDAnnotations attribute.jdComment undefined '["@param", "@return"]') }}
                            <div class="annotation">
                               <label>{{this.name}}</label>
+                              <div class="value">{{#if this.param }}<code>{{this.param}}</code> - {{/if}}{{this.explanation}}</div>
                            </div>
                         {{/each}}
                      {{/if}}
@@ -190,30 +191,32 @@
             <div  class="{{this.accessModifier}}">
                <h4 id="{{this.name}}">{{this.name}}</h4>
                <div class="definition">
-                  {{#each this.annotations}}
-                     <div class="annotation">
-                        {{this.name}}
-                        {{#unless (empty this.parameters)}}
-                           (
-                              {{~#each this.parameters~}}
-                                 {{#unless (eq @index 0)}}, {{/unless}}
-                                 {{this.name}}
-                                 {{#if this.value}}
-                                    ={{this.value}}
-                                 {{/if}}
-                              {{~/each~}}
-                           )
-                        {{/unless}}
-                     </div>
-                  {{/each}}
-                  {{this.accessModifier}}
-                  {{generateTypeString this.returnType}}
-                  {{this.name}}(
-                     {{~#each this.parameters~}}
-                        {{#unless (eq @index 0)}}, {{/unless}}
-                        {{generateTypeString this.type}} {{this.name}}
-                     {{~/each~}}
-                  )
+                  <code>
+                     {{#each this.annotations}}
+                        <div class="annotation">
+                           {{this.name~}}
+                           {{~#unless (empty this.parameters)~}}
+                              (
+                                 {{~#each this.parameters~}}
+                                    {{#unless (eq @index 0)}}, {{/unless}}
+                                    {{~this.name}}
+                                    {{~#if this.value}}
+                                       = {{this.value~}}
+                                    {{/if~}}
+                                 {{~/each~}}
+                              )
+                           {{~/unless~}}
+                        </div>
+                     {{/each}}
+                     {{this.accessModifier}}
+                     {{generateTypeString this.returnType}}
+                     {{this.name}}(
+                        {{~#each this.parameters~}}
+                           {{#unless (eq @index 0)}}, {{/unless}}
+                           {{generateTypeString this.type}} {{this.name}}
+                        {{~/each~}}
+                     )
+                  </code>
                </div>
                <div class="comment"> <!-- 261 -->
                   {{#if this.jdComment}}
@@ -222,6 +225,40 @@
                      No description
                   {{/if}}
                </div>
+               {{#if this.jdComment}}
+                  
+                  <div class="annotations">
+                     <div class="annotation"> <!-- @param -->
+                        <label>Parameters:</label>
+                        {{#each (filterJDAnnotations this.jdComment '["@param"]' undefined) }}
+                           <div class="value">
+                              <code>{{#if this.param}}{{this.param}}{{else}}not specified{{/if}}</code> - {{this.explanation}}
+                           </div>
+                        {{else}}
+                           Not documented
+                        {{/each}}
+                     </div>
+                     <div class="annotation"> <!-- @return -->
+                        <label>Returns:</label>
+                        {{#each (filterJDAnnotations this.jdComment '["@return"]' undefined) }}
+                           <div class="value">
+                              {{this.explanation}}
+                           </div>
+                        {{else}}
+                        
+                           Not documented
+                        {{/each}}
+                     </div>
+                     {{#each (filterJDAnnotations this.jdComment undefined '["@param", "@return"]') }}
+                        <div class="annotation"> <!-- remaining -->
+                           <label>{{this.name}}:</label>
+                           <div class="value">
+                              {{#if this.param}}<code>{{this.param}}</code> -{{/if}} {{this.explanation}}
+                           </div>
+                        </div>
+                     {{/each}}
+                  </div>
+               {{/if}}
             </div>
          {{/each}}
       </div>
