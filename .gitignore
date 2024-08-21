@@ -1,2 +1,13 @@
 lib
 node_modules
+tsconfig.tsbuildinfo
+out
+package-lock.json
+
+npm-shrinkwrap.json
+oclif.manifest.json
+oclif.lock
+
+*.tsbuildinfo
+.eslintcache
+.wireit

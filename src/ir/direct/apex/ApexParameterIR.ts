@@ -1,17 +1,17 @@
 import ApexIR from "./ApexIR.js";
 import ApexTypeIR from "./ApexTypeIR.js";
 
-const NATURE = 'ApexParameter';
+const NATURE = "ApexParameter";
 
 export default class ApexParameterIR extends ApexIR {
-   public type: ApexTypeIR;
+  public type: ApexTypeIR;
 
-   constructor(name: string, type: ApexTypeIR) {
-      super(name, NATURE);
-      this.type = type;
-   }
+  constructor(name: string, type: ApexTypeIR) {
+    super(name, NATURE);
+    this.type = type;
+  }
 
-   public toString(): string {
-      return `${this.type} -> ${this.name}`;
-   }
+  public toString(): string {
+    return `${this.type} -> ${this.name}`;
+  }
 }

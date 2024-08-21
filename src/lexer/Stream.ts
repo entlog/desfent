@@ -1,11 +1,11 @@
-import { Logger } from '@salesforce/core';
-import fs from 'graceful-fs';
+import { Logger } from "@salesforce/core";
+import fs from "graceful-fs";
 
 export default class Stream {
   private fd: number | null = null;
   private file: string;
   private logger: Logger;
-  private decoder = new TextDecoder('UTF-8');
+  private decoder = new TextDecoder("UTF-8");
 
   constructor(file: string, logger: Logger) {
     this.file = file;
@@ -13,7 +13,7 @@ export default class Stream {
   }
 
   private open(): void {
-    this.fd = fs.openSync(this.file, 'r');
+    this.fd = fs.openSync(this.file, "r");
   }
   public read(count: number): string {
     const b = Buffer.alloc(count);
@@ -49,9 +49,9 @@ export default class Stream {
 
   public static async open(file: string): Promise<Stream> {
     if (!file) {
-      throw new Error('Empty file');
+      throw new Error("Empty file");
     }
-    const logger: Logger = await Logger.child('Stream');
+    const logger: Logger = await Logger.child("Stream");
 
     const str: Stream = new Stream(file, logger);
     str.open();

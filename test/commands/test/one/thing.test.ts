@@ -1,9 +1,9 @@
 import { TestContext } from "@salesforce/core/testSetup";
 import { expect } from "chai";
 import { stubSfCommandUx } from "@salesforce/sf-plugins-core";
-import DesfentDoDoc from "../../../../src/commands/desfent/do/doc.js";
+import TestOneThing from "../../../../src/commands/test/one/thing.js";
 
-describe("desfent do doc", () => {
+describe("test one thing", () => {
   const $$ = new TestContext();
   let sfCommandStubs: ReturnType<typeof stubSfCommandUx>;
 
@@ -16,7 +16,7 @@ describe("desfent do doc", () => {
   });
 
   it("runs hello", async () => {
-    await DesfentDoDoc.run([]);
+    await TestOneThing.run([]);
     const output = sfCommandStubs.log
       .getCalls()
       .flatMap((c) => c.args)
@@ -25,12 +25,12 @@ describe("desfent do doc", () => {
   });
 
   it("runs hello with --json and no provided name", async () => {
-    const result = await DesfentDoDoc.run([]);
-    expect(result.path).to.equal("src/commands/desfent/do/doc.ts");
+    const result = await TestOneThing.run([]);
+    expect(result.path).to.equal("src/commands/test/one/thing.ts");
   });
 
   it("runs hello world --name Astro", async () => {
-    await DesfentDoDoc.run(["--name", "Astro"]);
+    await TestOneThing.run(["--name", "Astro"]);
     const output = sfCommandStubs.log
       .getCalls()
       .flatMap((c) => c.args)
