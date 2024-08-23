@@ -10,7 +10,6 @@ import ParserError from "./error/ParserError.js";
 export enum ResourceType {
   APEXCLASS = "ApexClass",
 }
-
 const EXT2PARSER: Map<String, ResourceType> = new Map<String, ResourceType>([
   [".cls", ResourceType.APEXCLASS],
 ]);
@@ -21,11 +20,11 @@ export default class TechFactory {
    * @param filePath
    * @returns
    */
-  private static getType(filePath: string): ResourceType {
+  private static getType(filePath: string): ResourceType|undefined {
     const ext: string = filePath.substring(filePath.lastIndexOf("."));
     const type: ResourceType | undefined = EXT2PARSER.get(ext);
     if (!type) {
-      throw new ParserError(`Unknown resource ${filePath}`, 0, 0);
+      return undefined;
     }
     return type;
   }
@@ -35,15 +34,19 @@ export default class TechFactory {
    * @param filePath
    * @returns
    */
-  public static async getParser(filePath: string): Promise<Parser<Token, IR>> {
-    const type: ResourceType = this.getType(filePath);
+  public static async getParser(filePath: string): Promise<Parser<Token, IR>|undefined> {
+     const logger: Logger = await Logger.child("Parser");
+    const type: ResourceType|undefined = this.getType(filePath);
+    if (!type) {
+      logger.warn(`Unknown type for file ${filePath}`);
+      return undefined;
+    }
     const lexer: Lexer<Token> = await this.getLexer(filePath, type);
-    const logger: Logger = await Logger.child("Parser");
-
+    
     if (type == ResourceType.APEXCLASS) {
       return new ApexClassParser(lexer, logger);
     }
-    throw new ParserError(`Unknown resource ${filePath}`, 0, 0);
+    return undefined;
   }
 
   public static async getLexer(

@@ -1,7 +1,6 @@
 import { SfCommand, Flags } from "@salesforce/sf-plugins-core";
 import { Messages } from "@salesforce/core";
 import { Token } from "../../../lexer/Lexer.js";
-import { fileURLToPath } from "url";
 import path from "path";
 import TechFactory from "../../../TechFactory.js";
 import { Parser } from "../../../parser/Parser.js";
@@ -9,9 +8,8 @@ import IR from "../../../ir/IR.js";
 import Utils, { Colour } from "../../../Utils.js";
 import HtmlFormatter from "../../../formatters/HtmlFormatter.js";
 import fs from "graceful-fs";
-import TreeHelper from "../../../ir/IRGroup.js";
 import IRGroup from "../../../ir/IRGroup.js";
-
+ 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages("@entlog/desfent", "desfent.do.doc");
 
@@ -71,26 +69,30 @@ export default class DesfentDoDoc extends SfCommand<number> {
     this.log(`Handling files: ${files}`);
     const group: IRGroup = new IRGroup();
     for (let idx = 0; idx < files.length; idx++) {
-      const parser: Parser<Token, IR> = await TechFactory.getParser(files[idx]);
+   
+      const parser: Parser<Token, IR>|undefined = await TechFactory.getParser(files[idx]);
+      if (!parser) { // No parser for this file..ignore
+         this.log(`Ignoring file ${files[idx]}`);
+         continue;
+      }
       const ir: IR = parser.parse();
       if (ir.getErrors().length > 0) {
-        this.log(
-          `Problems parsing: ${Utils.colourize(
+         this.log(
+            `Problems parsing: ${ir.name} on ${files[idx]} - ${Utils.colourize(
             ir.getErrors().toString(),
             Colour.RED
-          )}`
-        );
+            )}`
+         );
       } else {
-        this.log(`Parsed: ${ir.name} (${idx}/${files.length})`);
-        group.addTree(ir.name, ir);
+         this.log(`Parsed: ${ir.name} (${idx}/${files.length})`);
       }
+      group.addTree(ir.name, ir, files[idx]);
+      
     }
-    HtmlFormatter.prepare(flags.out, this.log.bind(this));
-    for (const ir of group.getTrees()) {
-      if (ir.valid) {
-        HtmlFormatter.format(ir, group, flags.out, this.log.bind(this));
-      }
-    }
+    this.log('Preparing...');
+    await HtmlFormatter.prepare(flags.out, this.log.bind(this));
+    this.log('Formatting...');
+    HtmlFormatter.format(group, flags.out, this.log.bind(this));
 
     await ((time: number) => {
       return new Promise((rs, rj) => setTimeout(rs, time));

@@ -30,7 +30,7 @@ export class IRParsingProblem {
   }
 
   public toString(): string {
-    return `{ERROR: ${this.message} (${this.line}:${this.offset}) ${
+    return `{IR ERROR: ${this.message} (${this.line}:${this.offset}) ${
       this.snapshot ? ":" + this.snapshot : ""
     }`;
   }

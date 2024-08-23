@@ -5,138 +5,168 @@ import fs from "graceful-fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import ParserError, { CODE_GENERIC } from "../error/ParserError.js";
-import ApexTypeIR from "../ir/direct/apex/ApexTypeIR.js";
-import { JDCommentIR } from "../ir/direct/apex/JDCommentIR.js";
-import JDCommentAnnotationIR from "../ir/direct/apex/JDCommentAnnotation.js";
-import TreeHelper from "../ir/IRGroup.js";
 import IRGroup from "../ir/IRGroup.js";
+import { RootNature } from "../ir/direct/Natures.js";
+import registerHelpers from "./FormatHelpers.js";
+import { Logger } from "@salesforce/core";
 
 const NATURE_2_TEMPLATE = new Map<string, string>([
-  ["ApexClass", "../../../resources/html/apexclass.hbs"],
-  ["ApexEnum", "../../../resources/html/apexenum.hbs"],
+   ["ApexClass", "../../../resources/html/apexclass.hbs"],
+   ["ApexEnum", "../../../resources/html/apexenum.hbs"],
 ]);
+type LogFnc = (message?: string, ...args: any[]) => void;
 
 export default class HtmlFormatter {
-  static common: string;
+   static common: string;
+   static logger:Logger|undefined;
 
-  private static copy(
-    dir: string,
-    todir: string,
-    log: (message?: string, ...args: any[]) => void
-  ) {
-    log("Creating css dir: " + todir);
-    if (!fs.existsSync(todir)) {
-      fs.mkdirSync(todir);
-    }
-    const csspath: string = path.resolve(fileURLToPath(import.meta.url), dir);
-    fs.readdirSync(csspath).forEach((f) => {
-      fs.copyFileSync(path.resolve(csspath, f), path.resolve(todir, f));
-    });
-  }
-  static prepare(
-    dir: string,
-    log: (message?: string, ...args: any[]) => void
-  ): void {
-    log("Preparing html output");
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir);
-    }
-    this.copy(
-      path.resolve(fileURLToPath(import.meta.url), "../../../resources/css"),
-      path.resolve(dir, "css"),
-      log
-    );
-    this.copy(
-      path.resolve(fileURLToPath(import.meta.url), "../../../resources/images"),
-      path.resolve(dir, "images"),
-      log
-    );
-    const templatepath: string = path.resolve(
-      fileURLToPath(import.meta.url),
-      "../../../resources/html/common.hbs"
-    ); // path.resolve(__dirname, '../../resources/html/apexclass.hhtml');
-    HtmlFormatter.common = fs.readFileSync(templatepath, { encoding: "utf-8" });
-
-    Handlebars.registerHelper("eq", (v1, v2) => {
-      return v1 == v2;
-    });
-    Handlebars.registerHelper("empty", (l) => {
-      return l.length == 0;
-    });
-    Handlebars.registerHelper("generateTypeString", (t: ApexTypeIR) => {
-      let ret: string = t.name;
-      if (t.generics.length > 0) {
-        ret += "<" + t.generics.map((g) => g.name).join(", ") + ">";
+   private static copy(
+      dir: string,
+      todir: string,
+      log: LogFnc
+   ) {
+      log("Creating css dir: " + todir);
+      if (!fs.existsSync(todir)) {
+         fs.mkdirSync(todir);
       }
-      return ret;
-    });
+      const csspath: string = path.resolve(fileURLToPath(import.meta.url), dir);
+      fs.readdirSync(csspath).forEach((f) => {
+         fs.copyFileSync(path.resolve(csspath, f), path.resolve(todir, f));
+      });
+   }
+   
 
-    Handlebars.registerHelper(
-      "filterJDAnnotations",
-      (o: JDCommentIR, typesIncluded: string, typesExcluded: string) => {
-        const included: Set<string> = new Set<string>();
-        const excluded: Set<string> = new Set<string>();
-        if (typesIncluded) {
-          (JSON.parse(typesIncluded) as string[]).forEach((i) =>
-            included.add(i)
-          );
-        }
-        if (typesExcluded) {
-          (JSON.parse(typesExcluded) as string[]).forEach((e) =>
-            excluded.add(e)
-          );
-        }
-        const ret: JDCommentAnnotationIR[] = o.annotations.filter(
-          (a) =>
-            (included.size == 0 || included.has(a.name)) &&
-            (excluded.size == 0 || !excluded.has(a.name))
-        );
-        return ret;
+   static async prepare(
+      dir: string,
+      log: LogFnc
+   ): Promise<void> {
+      log("Preparing html output");
+      this.logger = await Logger.child("Formatter");
+      Handlebars.logger.log = (level: number, obj: string) => log(obj);
+      if (!fs.existsSync(dir)) {
+         fs.mkdirSync(dir);
       }
-    );
-
-    Handlebars.registerHelper("dt", () => {
-      return new Date().toLocaleString();
-    });
-  }
-
-  private static getTemplate(nature: string | any): string {
-    const templatefile: string | undefined = NATURE_2_TEMPLATE.get(nature);
-    if (!templatefile) {
-      throw new ParserError(
-        `No template found for nature ${nature}`,
-        0,
-        0,
-        CODE_GENERIC
+      for (let nature in RootNature) {
+         const natureDir = path.resolve(dir, nature);
+         if (!fs.existsSync(natureDir)) {
+            fs.mkdirSync(natureDir);
+         }
+      }
+      this.copy(
+         path.resolve(fileURLToPath(import.meta.url), "../../../resources/css"),
+         path.resolve(dir, "css"),
+         log
       );
-    }
-    const templatepath: string = path.resolve(
-      fileURLToPath(import.meta.url),
-      templatefile
-    ); // path.resolve(__dirname, '../../resources/html/apexclass.hhtml');
-    const template: string =
+      this.copy(
+         path.resolve(fileURLToPath(import.meta.url), "../../../resources/images"),
+         path.resolve(dir, "images"),
+         log
+      );
+      const templatepath: string = path.resolve(
+         fileURLToPath(import.meta.url),
+         "../../../resources/html/common.hbs"
+      ); // path.resolve(__dirname, '../../resources/html/apexclass.hhtml');
+      HtmlFormatter.common = fs.readFileSync(templatepath, { encoding: "utf-8" });
+      
+      registerHelpers(this.logger);
+   }
+
+   private static getTemplateByFilename(filename: string):string {
+      const templatepath: string = path.resolve(
+         fileURLToPath(import.meta.url),
+         filename
+      ); // path.resolve(__dirname, '../../resources/html/apexclass.hhtml');
+      const template: string =
       this.common + "\n" + fs.readFileSync(templatepath, { encoding: "utf-8" });
-    return template;
-  }
+      return template;
+   }
+   private static getTemplateByNature(nature: string | any): string {
+      const templatefile: string | undefined = NATURE_2_TEMPLATE.get(nature);
+      if (!templatefile) {
+         throw new ParserError(
+            `No template found for nature ${nature}`,
+            0,
+            0,
+            CODE_GENERIC
+         );
+      }
+      return this.getTemplateByFilename(templatefile);
+   }
 
-  static format(
-    ir: IR,
-    group: IRGroup,
-    dir: string,
-    log: (message?: string, ...args: any[]) => void
-  ): void {
-    Handlebars.logger.log = (level: number, obj: string) => log(obj);
-    const template: string = this.getTemplate(ir.nature);
-    let doTemplate: HandlebarsTemplateDelegate = Handlebars.compile(template);
-    try {
-      let output: string = doTemplate(
-        { root: ir, group },
-        { allowProtoPropertiesByDefault: true }
-      );
-      let filename: string = path.resolve(dir, ir.name + ".html");
-      fs.writeFileSync(filename, output);
-    } catch (e) {
-      log(`ERROR: ${e}`);
-    }
-  }
+   private static formatBase(group:IRGroup, dir: string, log: LogFnc):void {
+      const files:string[] = [
+         "../../../resources/html/index.hbs",
+         "../../../resources/html/nothingSelected.hbs"
+      ]
+      for (let file of files) {
+         const template:string = this.getTemplateByFilename(file);
+         let doTemplate: HandlebarsTemplateDelegate = Handlebars.compile(template);
+         try {
+            let output: string = doTemplate(
+               { group },
+               { allowProtoPropertiesByDefault: true }
+            );
+            let filename: string = path.resolve(dir, path.basename(file).replace('.hbs', '.html'));
+            fs.writeFileSync(filename, output);
+         } catch (e) {
+            log(`ERROR on index: ${e} ${JSON.stringify(e)}`);
+         }
+      }
+   }
+
+
+   static format(group: IRGroup,
+      dir: string,
+      log: LogFnc
+   ): void {
+      
+      this.formatBase(group, dir, log);
+      
+      for (const tree of group.trees) {
+         if (tree.valid) {
+
+            this.formatSingle(tree, group, dir, log);
+         } else {
+            this.formatInvalid(group.getFilenameForIR(tree) as string, tree, dir, log);
+         }
+      }
+   }
+
+   private static formatInvalid(filename:string, ir: IR, dir:string, log: LogFnc): void {
+      
+      log('Formatting invalid ' + filename);
+      const template: string = this.getTemplateByFilename("../../../resources/html/problems.hbs");
+
+      let doTemplate: HandlebarsTemplateDelegate = Handlebars.compile(template);
+      try {
+         let output: string = doTemplate(
+            { root: ir, filename },
+            { allowProtoPropertiesByDefault: true }
+         );
+         let outfilename: string = path.resolve(dir, ir.nature, ir.name + ".html");
+         fs.writeFileSync(outfilename, output);
+      } catch (e) {
+         log(`ERROR on ir ${ir.name}: ${e}`);
+      }
+   }
+   private static formatSingle(
+      ir: IR,
+      group: IRGroup,
+      dir: string,
+      log: LogFnc
+   ): void {
+      
+      const template: string = this.getTemplateByNature(ir.nature);
+      let doTemplate: HandlebarsTemplateDelegate = Handlebars.compile(template);
+      try {
+         let output: string = doTemplate(
+            { root: ir, group },
+            { allowProtoPropertiesByDefault: true }
+         );
+         let filename: string = path.resolve(dir, ir.nature, ir.name + ".html");
+         fs.writeFileSync(filename, output);
+      } catch (e) {
+         log(`ERROR on ir ${ir.name}: ${e}`);
+      }
+   }
 }

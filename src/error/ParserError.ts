@@ -23,7 +23,7 @@ export default class ParserError extends Error {
   }
 
   public get code(): number {
-    return this.code;
+    return this._code;
   }
 
   public get line(): number {

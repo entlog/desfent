@@ -1,9 +1,10 @@
 import Utils from "../../../Utils.js";
+import { RootNature } from "../Natures.js";
 import ApexIR from "./ApexIR.js";
 import CommentIR from "./CommentIR.js";
 import { JDCommentIR } from "./JDCommentIR.js";
 
-const NATURE = "ApexEnum";
+
 const NATURE_VALUE = "ApexEnumValue";
 
 export class ApexEnumValueIR extends ApexIR {
@@ -24,7 +25,7 @@ export default class ApexEnumIR extends ApexIR {
   public comments: CommentIR[] = [];
 
   constructor(name: string) {
-    super(name, NATURE);
+    super(name, RootNature.ApexEnum);
   }
 
   public toString(): string {

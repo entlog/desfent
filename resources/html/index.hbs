@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" type="image/png" sizes="32x32" href="utils/favicon-32x32.png">
+   <link rel="icon" type="image/png" sizes="96x96" href="utils/favicon-96x96.png">
+   <link rel="icon" type="image/png" sizes="16x16" href="utils/favicon-16x16.png">
+   <link href="css/common.css" rel="stylesheet" type="text/css" />
+   <link href="css/doc.css" rel="stylesheet" type="text/css" />
+   <script>
+      let filter = {
+         selectItem: function (i) {
+            console.log('Selected: ' + i);
+            document.getElementById('info').setAttribute('class', 'showingItem');
+            document.getElementById('item').src = i + ".html";
+         },
+
+         clearElements: function () {
+            while (this.itemContainer.hasChildNodes()) {
+               this.itemContainer.removeChild(this.itemContainer.firstChild);
+            }
+         },
+         dumpElements: function () {
+            this.clearElements();
+            var searchText = this.searchCtr.value.toLowerCase();
+            if (searchText.length == 0) {
+               searchText = null;
+            }
+            console.log('Dumping elements with groups: ' + JSON.stringify(this.selGroups));
+            for (var i = 0; i < this.items.length; i++) {
+               if (this.selGroups[this.items[i].nature] === true && (searchText == null || this.items[i].lowerName.indexOf(searchText) != -1)) {
+                  var a = document.createElement('a');
+                  a.setAttribute('href', this.items[i].href);
+                  a.setAttribute('target', 'classFrame');
+                  a.setAttribute('class', this.items[i].nature);
+                  a.appendChild(document.createTextNode(this.items[i].prettyNature + ' - ' + this.items[i].name));
+                  this.itemContainer.appendChild(a);
+               }
+            }
+         },
+         _allSelected: function () {
+
+            for (var i = 0; i < this.groups.length; i++) {
+               if (this.groups[i].checked === false) {
+                  return false;
+               }
+            }
+            return true;
+         },
+         toggleAllGroups: function () {
+            var select = true;
+            if (this._allSelected()) {
+               // Deselect all
+               select = false;
+            }
+
+            for (var i = 0; i < this.groups.length; i++) {
+               this.groups[i].checked = select;
+               var groupName = this.groups[i].getAttribute('data-id');
+               this.selGroups[groupName] = select;
+            }
+            this.dumpElements();
+         },
+         onCheckChange: function (e) {
+            var check = e.target;
+            var groupName = check.getAttribute('data-id');
+            this.selGroups[groupName] = check.checked;
+            console.log('Changed group ' + groupName + ' to ' + check.checked);
+            this.dumpElements();
+         },
+         onClickGroup: function (e) {
+
+            if (e.target.nodeType != Node.ELEMENT_NODE) {
+               return; // Ignored
+            }
+            var check = e.target;
+            if (e.target.nodeName.toLowerCase() != 'input') {
+               var node = e.target;
+               if (node.nodeName.toLowerCase() == 'label') {
+                  node = node.parentNode;
+               }
+               check = node.querySelector('input[type="checkbox"]');
+               check.checked = !check.checked;
+            }
+
+
+            var groupName = check.getAttribute('data-id');
+            this.selGroups[groupName] = check.checked;
+            console.log('Changed group ' + groupName + ' to ' + check.checked);
+            this.dumpElements();
+
+         },
+         onTextChange: function (e) {
+            console.log('Changed to ' + e.target.value);
+            if (this.searchTimeout) {
+               clearTimeout(this.searchTimeout);
+
+            }
+            this.searchTimeout = setTimeout(this.dumpElements.bind(this), 1000);
+         },
+         initialize: function () {
+            this.itemContainer = document.getElementById('elements');
+            this.searchCtr = document.getElementById('search-text');
+            this.searchCtr.addEventListener('input', this.onTextChange.bind(this));
+            var checks = document.getElementById('groups').querySelectorAll('input[type="checkbox"]')
+            console.log('Obtained checks:', checks)
+            var onChange = this.onCheckChange.bind(this);
+            var onClickGroup = this.onClickGroup.bind(this);
+            for (var i = 0; i < checks.length; i++) {
+               this.groups.push(checks[i]);
+               var groupName = checks[i].getAttribute('data-id');
+               this.availGroups.push(groupName);
+               // checks[i].addEventListener('change', onChange);
+               this.selGroups[groupName] = true;
+               checks[i].parentNode.addEventListener('click', onClickGroup);
+            }
+            console.log('Available groups: ', this.availGroups);
+            console.log('Sel groups: ', this.selGroups);
+            this.dumpElements();
+         },
+         itemContainer: null,
+         items: [],
+         groups: [],
+         selGroups: {},
+         availGroups: [],
+         searchCtr: null,
+         searchTimeout: null
+
+      };
+      document.addEventListener('DOMContentLoaded', filter.initialize.bind(filter));
+   </script>
+</head>
+
+<body class="main">
+   <div id="sections">
+      <div id="groups">
+         <a onclick="filter.toggleAllGroups()" href="javascript:void(0)">All / None</a>
+         <div class="group-item">
+            <input type="checkbox" data-id="ApexClass" checked><label>Apex Class</label>
+         </div>
+         <div class="group-item">
+            <input type="checkbox" data-id="ApexTrigger" checked><label>Apex Trigger</label>
+         </div>
+         <div class="group-item">
+            <input type="checkbox" data-id="ApexEnum" checked><label>Apex Enum</label>
+         </div>
+         <div class="group-item">
+            <input type="checkbox" data-id="Object" checked><label>Object</label>
+         </div>
+         <div class="group-item">
+            <input type="checkbox" data-id="Profile" checked><label>Profile</label>
+         </div>
+         <div class="group-item">
+            <input type="checkbox" data-id="Layout" checked><label>Layout</label>
+         </div>
+         <div id="search">
+            <input type="text" id="search-text" placeholder="Filter..." />
+            <div id="clear"></div>
+         </div>
+      </div>
+      <div id="elements" class="showAll">
+      </div>
+   </div>
+   <div id="info">
+
+
+      <iframe src="nothingSelected.html" name="classFrame" id="item"></iframe>
+   </div>
+   <script>
+		
+		{{#each group.trees}}
+		filter.items.push({
+			nature: "{{this.nature}}",
+			name: "{{this.name}}",
+			lowerName: "{{this.name}}".toLowerCase(),
+			href: "{{this.nature}}/{{this.name}}.html",
+			prettyNature: "{{nature this}}"
+		});
+		{{/each}}
+	</script>
+</body>
+
+</html>

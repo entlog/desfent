@@ -1,4 +1,5 @@
 import Utils from "../../../Utils.js";
+import { RootNature } from "../Natures.js";
 import ApexAnnotationIR from "./ApexAnnotationIR.js";
 import ApexAttributeIR from "./ApexAttributeIR.js";
 import ApexEnumIR from "./ApexEnumIR.js";
@@ -8,7 +9,7 @@ import ApexStaticBlockIR from "./ApexStaticBlockIR.js";
 import ApexTypeIR from "./ApexTypeIR.js";
 import { JDCommentIR } from "./JDCommentIR.js";
 
-const NATURE = "ApexClass";
+
 
 export default class ApexClassIR extends ApexIR {
   // Documentation comment
@@ -38,7 +39,7 @@ export default class ApexClassIR extends ApexIR {
   }
 
   constructor(name: string) {
-    super(name, NATURE);
+    super(name, RootNature.ApexClass);
   }
 
   public toString(): string {

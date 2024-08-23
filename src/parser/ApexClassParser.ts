@@ -25,6 +25,7 @@ import ApexClassLexer, {
   TOKENTYPE_COMMENT_SL,
   TOKENTYPE_COMMENT_WORD,
 } from "../lexer/ApexClassLexer.js";
+import path from "path";
 
 import { ParseContext, Parser } from "./Parser.js";
 import ApexClassIR from "../ir/direct/apex/ApexClassIR.js";
@@ -1169,6 +1170,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
   }
 
   public parse(): ApexIR {
+   this.logger.info(`Starting parse of resource ${this.lexer.getResourceName()}`);
     let ir: ApexIR | undefined;
     try {
       if (this.attempt("class", this.doClass)) {
@@ -1186,8 +1188,8 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
       }
     } catch (e) {
       this.logger.error(`Problems interpreting code ${e}`);
-      const className: string = this.getResourceName();
-      ir = new ApexClassIR(className);
+      const resourceName: string = path.basename(this.getResourceName());
+      ir = new ApexClassIR(resourceName);
       let line: number = 0;
       let offset: number = 0;
       let message: string = `${e}`;
@@ -1201,9 +1203,6 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
         message = e.message;
       }
       ir.addParsingProblem(message, line, offset, snapshot);
-    }
-    if (!ir) {
-      throw new Error("Problem parsing");
     }
     return ir;
   }
