@@ -17,7 +17,12 @@ export default class IRGroup {
     return this._name2trees.get(name);
   }
   public get trees(): Iterable<IR> {
-    return this._name2trees.values();
+   return [...this._name2trees.values()].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase()?1:a.name.toLowerCase() < b.name.toLowerCase()?-1:0);
+    
+  }
+
+  public get size():number {
+   return this._name2trees.size;
   }
 
   public getFilenameForIR(tree: IR):string|undefined {

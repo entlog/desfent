@@ -16,6 +16,7 @@ const registerHelpers = (logger: Logger) => {
       return l.length == 0;
    });
    Handlebars.registerHelper("generateTypeString", (t: ApexTypeIR) => {
+      logger.info(`Creating type string for ${t}` );
       let ret: string = t.name;
       if (t.generics.length > 0) {
          ret += "<" + t.generics.map((g) => g.name).join(", ") + ">";

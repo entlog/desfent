@@ -22,6 +22,7 @@ export default class ApexClassIR extends ApexIR {
   public isClass: boolean = true;
   public interfaces: ApexTypeIR[] = [];
   public baseClass: ApexTypeIR | undefined;
+  public outerClass: ApexClassIR | undefined;
   public annotations: ApexAnnotationIR[] = [];
   public constructorMethod: ApexMethodIR | undefined;
   public methods: ApexMethodIR[] = [];

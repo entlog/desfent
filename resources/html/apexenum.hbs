@@ -8,16 +8,33 @@
    <body class="apexenum mdinfo hideprivate">
       {{>header}}
       <h1 class="objectName"> {{nature this}} - {{root.name}}</h1>
-      <div class="hierarchy">
-         <!-- TODO: Hierarchy -->
-         {{hierarchy this}}
-      </div>
       <div class="separator"></div>
       <section class="overview">
 		   <div class="definition">
             {{root.accessModifier}}
             enum
             <b>{{root.name}}</b>
+         </div>
+         <div class="description">
+            {{#if root.jdComment}}
+               <div class="text">
+                  {{root.jdComment.text}}
+               </div>
+               <div class="annotations">
+                  {{#each root.jdComment.annotations}}
+                     <div class="annotation">
+                        <span class="annlabel">
+                           <!-- TODO: Translate known annotations -->
+                           {{~#this~}}
+                              {{this.name}}&nbsp;{{#if this.param}}{{this.param}}{{/if}}:
+                           {{/this}}
+                        </span>
+                        <span class="anndesc">{{this.explanation}}</span>
+                     </div>
+
+                  {{/each}}
+               </div>
+            {{/if}}
          </div>
       </section>
       <section class="values" id="values">

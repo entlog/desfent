@@ -14,7 +14,6 @@ const NATURE_2_TEMPLATE = new Map<string, string>([
    ["ApexClass", "../../../resources/html/apexclass.hbs"],
    ["ApexEnum", "../../../resources/html/apexenum.hbs"],
 ]);
-type LogFnc = (message?: string, ...args: any[]) => void;
 
 export default class HtmlFormatter {
    static common: string;
@@ -22,10 +21,9 @@ export default class HtmlFormatter {
 
    private static copy(
       dir: string,
-      todir: string,
-      log: LogFnc
+      todir: string
    ) {
-      log("Creating css dir: " + todir);
+      this.logger?.info("Creating css dir: " + todir);
       if (!fs.existsSync(todir)) {
          fs.mkdirSync(todir);
       }
@@ -37,12 +35,11 @@ export default class HtmlFormatter {
    
 
    static async prepare(
-      dir: string,
-      log: LogFnc
+      dir: string
    ): Promise<void> {
-      log("Preparing html output");
+      this.logger?.info("Preparing html output");
       this.logger = await Logger.child("Formatter");
-      Handlebars.logger.log = (level: number, obj: string) => log(obj);
+      Handlebars.logger.log = (level: number, obj: string) => this.logger?.info(obj);
       if (!fs.existsSync(dir)) {
          fs.mkdirSync(dir);
       }
@@ -54,13 +51,12 @@ export default class HtmlFormatter {
       }
       this.copy(
          path.resolve(fileURLToPath(import.meta.url), "../../../resources/css"),
-         path.resolve(dir, "css"),
-         log
+         path.resolve(dir, "css")
       );
       this.copy(
          path.resolve(fileURLToPath(import.meta.url), "../../../resources/images"),
-         path.resolve(dir, "images"),
-         log
+         path.resolve(dir, "images")
+         
       );
       const templatepath: string = path.resolve(
          fileURLToPath(import.meta.url),
@@ -93,7 +89,7 @@ export default class HtmlFormatter {
       return this.getTemplateByFilename(templatefile);
    }
 
-   private static formatBase(group:IRGroup, dir: string, log: LogFnc):void {
+   private static formatBase(group:IRGroup, dir: string):void {
       const files:string[] = [
          "../../../resources/html/index.hbs",
          "../../../resources/html/nothingSelected.hbs"
@@ -109,7 +105,7 @@ export default class HtmlFormatter {
             let filename: string = path.resolve(dir, path.basename(file).replace('.hbs', '.html'));
             fs.writeFileSync(filename, output);
          } catch (e) {
-            log(`ERROR on index: ${e} ${JSON.stringify(e)}`);
+            this.logger?.info(`ERROR on index: ${e} ${JSON.stringify(e)}`);
          }
       }
    }
@@ -117,24 +113,26 @@ export default class HtmlFormatter {
 
    static format(group: IRGroup,
       dir: string,
-      log: LogFnc
+      progressCallback: (current:number, total:number) => void
    ): void {
       
-      this.formatBase(group, dir, log);
-      
+      this.formatBase(group, dir);
+      let idx:number = 0;
       for (const tree of group.trees) {
          if (tree.valid) {
-
-            this.formatSingle(tree, group, dir, log);
+            
+            this.formatSingle(tree, group, dir);
          } else {
-            this.formatInvalid(group.getFilenameForIR(tree) as string, tree, dir, log);
+            this.formatInvalid(group.getFilenameForIR(tree) as string, tree, dir);
          }
+         idx++;
+         progressCallback(idx, group.size);
       }
    }
 
-   private static formatInvalid(filename:string, ir: IR, dir:string, log: LogFnc): void {
+   private static formatInvalid(filename:string, ir: IR, dir:string): void {
       
-      log('Formatting invalid ' + filename);
+      this.logger?.info('Formatting invalid ' + filename);
       const template: string = this.getTemplateByFilename("../../../resources/html/problems.hbs");
 
       let doTemplate: HandlebarsTemplateDelegate = Handlebars.compile(template);
@@ -146,14 +144,13 @@ export default class HtmlFormatter {
          let outfilename: string = path.resolve(dir, ir.nature, ir.name + ".html");
          fs.writeFileSync(outfilename, output);
       } catch (e) {
-         log(`ERROR on ir ${ir.name}: ${e}`);
+         this.logger?.info(`ERROR on ir ${ir.name}: ${e} -> ${(e as Error).stack}`);
       }
    }
    private static formatSingle(
       ir: IR,
       group: IRGroup,
-      dir: string,
-      log: LogFnc
+      dir: string
    ): void {
       
       const template: string = this.getTemplateByNature(ir.nature);
@@ -166,7 +163,7 @@ export default class HtmlFormatter {
          let filename: string = path.resolve(dir, ir.nature, ir.name + ".html");
          fs.writeFileSync(filename, output);
       } catch (e) {
-         log(`ERROR on ir ${ir.name}: ${e}`);
+         this.logger?.info(`ERROR on ir ${ir.name}: ${e} -> ${(e as Error).stack}`);
       }
    }
 }

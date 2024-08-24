@@ -230,5 +230,5 @@ export abstract class Parser<T extends Token, Z extends IR> {
   /**
    * Returns the object with the IR (Intermediate Representation)
    */
-  public abstract parse(): Z;
+  public abstract parse(): Z[];
 }

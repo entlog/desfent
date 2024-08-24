@@ -8,6 +8,12 @@
    <body class="apexclass mdinfo hideprivate">
       {{>header}}
       <h1 class="objectName"> {{nature root}} - {{root.name}}</h1>
+      <div class="outer">
+         {{#if root.outerClass}}
+            Outer class: <a href="{{root.outerClass.name}}.html">{{root.outerClass.name}}</a>
+            <div class="separator"></div>
+         {{/if}}
+      </div>
       <div class="hierarchy">
          {{#each (hierarchy root.name group)}}
             <div>
@@ -117,7 +123,9 @@
 									<td>
 										<code>
                                  {{this.accessModifier}}
-                                 {{generateTypeString this.returnType}}
+                                 {{#if this.returnType}} {{! Constructors do not have return type }}
+                                    {{generateTypeString this.returnType}}
+                                 {{/if}}
                               </code>
                            </td>
                            <td>
@@ -213,7 +221,9 @@
                         </div>
                      {{/each}}
                      {{this.accessModifier}}
-                     {{generateTypeString this.returnType}}
+                     {{#if this.returnType}}
+                        {{generateTypeString this.returnType}}
+                     {{/if}}
                      {{this.name}}(
                         {{~#each this.parameters~}}
                            {{#unless (eq @index 0)}}, {{/unless}}
@@ -230,7 +240,6 @@
                   {{/if}}
                </div>
                {{#if this.jdComment}}
-                  
                   <div class="annotations">
                      <div class="annotation"> <!-- @param -->
                         <label>Parameters:</label>
