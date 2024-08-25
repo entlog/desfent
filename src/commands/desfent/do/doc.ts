@@ -136,7 +136,7 @@ export default class DesfentDoDoc extends SfCommand<number> {
                   )}`
                );
             } else {
-               this.logger.info(`Parsed: ${ir.name} (${idx}/${files.length})`);
+               this.logger.info(`Parsed: ${ir.name} (${idx + 1}/${files.length})`);
             }
             group.addTree(ir.name, ir, files[idx]);
             this.stats.add(files[idx], ir);

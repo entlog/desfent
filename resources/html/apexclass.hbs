@@ -4,9 +4,21 @@
       <meta charset="utf-8">
       <link href="../css/common.css" rel="stylesheet" type="text/css"/>
       <link href="../css/doc.css" rel="stylesheet" type="text/css"/>
+      <script>
+         function hidePrivate(really) {
+            if (really) {
+               if (!document.body.classList.contains('hideprivate')) {
+                  document.body.classList.add('hideprivate');
+               }
+            } else {
+               document.body.classList.remove('hideprivate');
+            }
+         }
+      </script>
    </head>
    <body class="apexclass mdinfo hideprivate">
-      {{>header}}
+      {{! >header }}
+      {{>header2}}
       <h1 class="objectName"> {{nature root}} - {{root.name}}</h1>
       <div class="outer">
          {{#if root.outerClass}}

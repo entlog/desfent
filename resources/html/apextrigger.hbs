@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link href="../css/common.css" rel="stylesheet" type="text/css"/>
+	<link href="../css/doc.css" rel="stylesheet" type="text/css"/>
+</head>
+<body class="apexclass mdinfo">
+   {{>header2}}
+   <h1 class="objectName">{{nature root}} - {{root.name}}</h1>
+   <div class="separator"/>
+   <section class="overview">
+		<div class="definition">
+			trigger <b>{{root.name}}</b>
+			on 
+			<span class="objName">{{root.onObject}}</span>
+			(
+			{{triggerOnString root}}			
+			)
+			
+		</div>{{! Line 54}}
+      <div class="description">
+         {{#if root.jdComment}}
+               <div class="text">
+                  {{root.jdComment.text}}
+               </div>
+               <div class="annotations">
+                  {{#each root.jdComment.annotations}}
+                     <div class="annotation">
+                        <span class="annlabel">
+                           <!-- TODO: Translate known annotations -->
+                           {{~#this~}}
+                              {{this.name}}&nbsp;{{#if this.param}}{{this.param}}{{/if}}:
+                           {{/this}}
+                        </span>
+                        <span class="anndesc">{{this.explanation}}</span>
+                     </div>
+                  {{/each}}
+               </div>
+            {{/if}}
+      </div>
+      <div class="stats">
+			<div class="stats">
+				<span class="statlabel">Number of lines:</span>
+				<span class="statvalue">{{root.length}}</span>
+			</div>
+			<div class="stats">
+				<span class="statlabel">Depth:</span>
+				<span class="statvalue">{{root.maxNestDepth}}</span>
+			</div>
+		</div>
+	</section>
+   </section>
+</body>
+</html>

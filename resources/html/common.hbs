@@ -6,3 +6,50 @@
    </div>
 {{/inline}}
 
+{{#*inline "header2"}}
+	<div class="header">
+		<div class="logo"></div>
+		<div class="text">Welcome to the ultimate tool in Salesforce Documentation</div>
+		<div class="generated">Generated on {{dt}}</div>
+	</div>
+   <style>
+   .subheader.sticky {
+      position: fixed;
+      top: 0;
+      width: 100%
+   }
+   </style>
+   <script>
+      var HeaderSticker = {
+         header: null,
+         sticky: 0,
+         prepare: function() {
+            window.addEventListener('scroll', this.updateHeader.bind(this));
+            this.header = document.getElementById("subheader");
+            this.sticky = this.header.offsetTop;	
+            console.log('Sticky header prepared');
+         },
+         updateHeader: function() {
+            console.log('Scroll');
+            if (window.pageYOffset > this.sticky) {
+               this.header.classList.add("sticky");
+            } else {
+               this.header.classList.remove("sticky");
+            }
+         }
+      }
+      
+      document.addEventListener('DOMContentLoaded', HeaderSticker.prepare.bind(HeaderSticker));
+   </script>
+   <div class="subheader" id="subheader">
+      <a href="#top">Top</a>
+      {{#headerLinks root.nature}}
+         |
+         <a href="{{link}}">
+            {{text}}
+         </a>
+      {{/headerLinks}}
+   </div>
+	
+{{/inline}}
+

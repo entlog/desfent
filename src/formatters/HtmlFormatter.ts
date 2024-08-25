@@ -13,6 +13,7 @@ import { Logger } from "@salesforce/core";
 const NATURE_2_TEMPLATE = new Map<string, string>([
    ["ApexClass", "../../../resources/html/apexclass.hbs"],
    ["ApexEnum", "../../../resources/html/apexenum.hbs"],
+   ["ApexTrigger", "../../../resources/html/apextrigger.hbs"],
 ]);
 
 export default class HtmlFormatter {
@@ -37,8 +38,8 @@ export default class HtmlFormatter {
    static async prepare(
       dir: string
    ): Promise<void> {
-      this.logger?.info("Preparing html output");
       this.logger = await Logger.child("Formatter");
+      this.logger?.info("Preparing html output");
       Handlebars.logger.log = (level: number, obj: string) => this.logger?.info(obj);
       if (!fs.existsSync(dir)) {
          fs.mkdirSync(dir);
@@ -115,12 +116,11 @@ export default class HtmlFormatter {
       dir: string,
       progressCallback: (current:number, total:number) => void
    ): void {
-      
+      this.logger?.info(`Formatting ${group.size} components`);
       this.formatBase(group, dir);
       let idx:number = 0;
       for (const tree of group.trees) {
          if (tree.valid) {
-            
             this.formatSingle(tree, group, dir);
          } else {
             this.formatInvalid(group.getFilenameForIR(tree) as string, tree, dir);
