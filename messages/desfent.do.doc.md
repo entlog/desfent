@@ -1,6 +1,6 @@
 # summary
 
-This command analyzes the passed file
+This command analyzes the file or folder and creates documentation in HTML format (like the Javadoc generated one).
 
 # description
 

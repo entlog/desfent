@@ -712,9 +712,9 @@ export default class ApexClassParser extends ApexBaseParser<ApexIR> {
          let jdComment: JDCommentIR | undefined;
          let comments: CommentIR[] = [];
          while (goOn) {
-            if (this.lookAhead().type === TOKENTYPE_COMMENT_ML_START && this.attempt("jdComment", this.doJDComment)) {
+            if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("jdComment", this.doJDComment)) {
                jdComment = this.doJDComment();
-            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("comment", this.doMLComment)) {
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_ML_START && this.attempt("comment", this.doMLComment)) {
                comments.push(this.doMLComment());
             } else {
                goOn = false;
