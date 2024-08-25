@@ -13,11 +13,33 @@ import IRGroup from "../../../ir/IRGroup.js";
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages("@entlog/desfent", "desfent.do.doc");
 
+class AnalysisStats {
+   public analyzed:string[] = [];
+   public nature2analyzed:Map<string, string[]> = new Map<string, string[]>();
+   public failed2message:Map<string, string> = new Map<string, string>();
+
+   public add(filename:string, ir:IR):void {
+      this.analyzed.push(filename);
+      let bynature:string[]|undefined = this.nature2analyzed.get(ir.nature);
+      if (!bynature) {
+         bynature = [];
+         this.nature2analyzed.set(ir.nature, bynature);
+      }
+      bynature.push(filename);
+      if (!ir.valid) {
+         this.failed2message.set(filename, ir.getErrors().join(';'));
+      }
+   }
+
+}
+
 export default class DesfentDoDoc extends SfCommand<number> {
    public static readonly summary = messages.getMessage("summary");
    public static readonly description = messages.getMessage("description");
    public static readonly examples = messages.getMessages("examples");
    private logger:Logger|undefined;
+
+   private stats:AnalysisStats = new AnalysisStats();
 
    public static readonly flags = {
       file: Flags.string({
@@ -41,6 +63,11 @@ export default class DesfentDoDoc extends SfCommand<number> {
          exists: true,
          exactlyOne: ["file"],
       }),
+      showstats: Flags.boolean({
+         summary: messages.getMessage("flags.showstats.summary"),
+         description: messages.getMessage("flags.showstats.description"),
+         required: false
+      })
    };
 
    private getFilesUnderDir(dir: string): string[] {
@@ -62,6 +89,8 @@ export default class DesfentDoDoc extends SfCommand<number> {
       return files;
    }
 
+   
+
    public async run(): Promise<number> {
       const { flags } = await this.parse(DesfentDoDoc);
       this.logger = await Logger.child("Command");
@@ -77,10 +106,6 @@ export default class DesfentDoDoc extends SfCommand<number> {
          if (!fs.existsSync(flags.directory as string)) {
             throw new Error(`Directory not found ${flags.directory}`)
          }
-         // Read from directory
-         // fs.readdirSync(flags.directory as string).forEach((f) =>
-         //    files.push(path.resolve(flags.directory as string, f))
-         // );
          files = this.getFilesUnderDir(flags.directory as string);
       }
 
@@ -94,7 +119,6 @@ export default class DesfentDoDoc extends SfCommand<number> {
       const group: IRGroup = new IRGroup();
       for (let idx = 0; idx < files.length; idx++) {
          this.progress.update(Math.floor(idx * 800 / files.length) / 10); // 80%
-         // this.log(`Progress ${idx}: ${Math.abs(idx * 100 / files.length)}`);
 
          let parser: Parser<Token, IR> | undefined = await TechFactory.getParser(files[idx]);
          if (!parser) { // No parser for this file..ignore
@@ -115,6 +139,7 @@ export default class DesfentDoDoc extends SfCommand<number> {
                this.logger.info(`Parsed: ${ir.name} (${idx}/${files.length})`);
             }
             group.addTree(ir.name, ir, files[idx]);
+            this.stats.add(files[idx], ir);
          }
          
          parser = undefined;
@@ -126,6 +151,22 @@ export default class DesfentDoDoc extends SfCommand<number> {
          });
       this.progress.finish();
 
+      if (flags.showstats) {
+         this.log('\n----- STATS -----');
+         this.log(`* ${this.stats.analyzed.length} files analyzed`);
+         
+         this.stats.nature2analyzed.forEach((files, nature, m) => {
+            this.log(`** ${nature}: ${files.length} files analyzed`);
+         });
+         this.log(`\n* ${this.stats.failed2message.size} anaylisis errors found`);
+         if (this.stats.failed2message.size > 0) {
+            this.log('\n----- ERRORS -----');
+            this.stats.failed2message.forEach((file, error, map) => {
+               this.log(`File ${file}: ${error}`);
+            });
+         }
+         this.log('\n');
+      }
       await ((time: number) => {
          return new Promise((rs, rj) => setTimeout(rs, time));
       })(2000);

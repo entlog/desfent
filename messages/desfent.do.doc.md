@@ -22,6 +22,14 @@ Directory to analyze
 
 Include here the name of the directory to be analyzed
 
+# flags.showstats.summary
+
+If specified the command will show a summary of the analysis at the end
+
+# flags.showstats.description
+
+Include this flag if you want a summary of the amount of files analyzed and any problems in the analysis found.
+
 # examples
 
 - <%= config.bin %> <%= command.id %>

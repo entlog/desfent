@@ -2,7 +2,7 @@
 export DEBUG='sf:Parser'                       
 export SF_LOG_LEVEL='info'     
 */ import ApexIR from "../ir/direct/apex/ApexIR.js";
-import ApexClassLexer, {
+import {
    ApexToken,
    TOKENTYPE_CODE_ANNOTATION,
    TOKENTYPE_CODE_ASSIGN,
@@ -25,17 +25,15 @@ import ApexClassLexer, {
    TOKENTYPE_COMMENT_ML_START,
    TOKENTYPE_COMMENT_SL,
    TOKENTYPE_COMMENT_WORD,
-} from "../lexer/ApexClassLexer.js";
+} from "../lexer/ApexLexer.js";
 import path from "path";
 
 import { ParseContext, Parser } from "./Parser.js";
 import ApexClassIR from "../ir/direct/apex/ApexClassIR.js";
 import ParserError, { CODE_MALFORMED } from "../error/ParserError.js";
-import NoMatchParsingException from "../error/NoMatchParsingError.js";
 import { JDCommentIR } from "../ir/direct/apex/JDCommentIR.js";
 import CommentIR from "../ir/direct/apex/CommentIR.js";
 import { Token, TOKENTYPE_EOF } from "../lexer/Lexer.js";
-import IR from "../ir/IR.js";
 import ApexTypeIR from "../ir/direct/apex/ApexTypeIR.js";
 import JDCommentAnnotationIR from "../ir/direct/apex/JDCommentAnnotation.js";
 import ApexAnnotationIR from "../ir/direct/apex/ApexAnnotationIR.js";
@@ -63,8 +61,9 @@ import ApexParameterIR from "../ir/direct/apex/ApexParameterIR.js";
 import ApexStaticBlockIR from "../ir/direct/apex/ApexStaticBlockIR.js";
 import ApexAttributeIR from "../ir/direct/apex/ApexAttributeIR.js";
 import ApexEnumIR, { ApexEnumValueIR } from "../ir/direct/apex/ApexEnumIR.js";
+import ApexBaseParser from "./ApexBaseParser.js";
 
-export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
+export default class ApexClassParser extends ApexBaseParser<ApexIR> {
    private ret:ApexIR[] = [];
    // Used to calculate inner class names. Every time a new class is detected the name is pushed here
    private classStack:ApexClassIR[] = [];
@@ -94,121 +93,9 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
 
    }
 
-   private doJDCommentAnnotation(): JDCommentAnnotationIR {
-      this.pushContext(ParseContext.ANNOTATION);
-      try {
-         let token: Token = this.lookAhead();
+   
 
-         if (token.type !== TOKENTYPE_COMMENT_JD_ANNOTATION) {
-            throw this.failedAttemptError;
-         }
-         this.log(`Creating jd comment annotation with token ${token}`);
-         let ret: JDCommentAnnotationIR = new JDCommentAnnotationIR(token.text);
-
-         this.nextToken();
-         token = this.lookAhead();
-         if (
-            JD_ANNOTATIONS_WITHPARAMS.has(ret.name) &&
-            token.type === TOKENTYPE_COMMENT_WORD
-         ) {
-            this.log(`Found annotation with param ${ret}`);
-            ret.param = token.text;
-            this.nextToken();
-            token = this.lookAhead();
-         }
-         ret.explanation = "";
-
-         const line: number = token.line;
-         this.log(`Reading remaining annotation on line ${line}`);
-         while (
-            (token = this.lookAhead()).line === line &&
-            token.type !== TOKENTYPE_EOF &&
-            token.type !== TOKENTYPE_COMMENT_ML_END
-         ) {
-            ret.explanation += ` ${token.text}`;
-            this.nextToken();
-         }
-         this.log(
-            `Created jd comment annotation ${ret} - Next token ${this.lookAhead()}`
-         );
-         return ret;
-      } finally {
-         this.popContext();
-      }
-   }
-
-   /**
-    * Method that interprets a javadoc comment
-    * @returns
-    */
-   private doJDComment(): JDCommentIR {
-      this.pushContext(ParseContext.JDCOMMENT);
-      try {
-         this.log(`Doing jd comment...`);
-         let token: ApexToken = this.lookAhead();
-         if (token.type != TOKENTYPE_COMMENT_JD_START) {
-            this.log(`Desisting jdcomment...no comment start ${token}`);
-            throw this.failedAttemptError;
-         }
-         this.log(`Detected jdcomment start...`);
-         this.nextToken();
-         let ret: JDCommentIR = new JDCommentIR();
-         let text: string = "";
-         let line: number = -1;
-         do {
-            token = this.lookAhead();
-            this.log(`Token ${token}`);
-            if (token.type == TOKENTYPE_COMMENT_ML_END) {
-               this.nextToken(); // Consume
-               break;
-            } else if (token.type === TOKENTYPE_COMMENT_JD_ANNOTATION) {
-               ret.addAnnotation(this.doJDCommentAnnotation());
-            } else {
-               if (line == token.line || token.text.trim() !== '*') {
-                  text += ` ${token.text}`;
-               }
-               this.nextToken(); // Consume
-            }
-         } while (token != null && token.type != TOKENTYPE_EOF);
-         ret.text = text.trim();
-         this.log(`Accepted jdcomment. Next token ${this.lookAhead()}`);
-         return ret;
-      } finally {
-         this.popContext();
-      }
-   }
-
-   private doMLComment(): CommentIR {
-      this.log(`Doing jd comment...`);
-      this.pushContext(ParseContext.COMMENT);
-      try {
-         let token: ApexToken = this.lookAhead();
-         if (token.type != TOKENTYPE_COMMENT_ML_START) {
-            this.log(`Desisting jdcomment...no comment start ${token}`);
-            throw this.failedAttemptError;
-         }
-         this.log(`Detected jdcomment start...`);
-         this.nextToken();
-         let ret: CommentIR = new CommentIR();
-         ret.multiline = true;
-         ret.text = "";
-         do {
-            token = this.lookAhead();
-            this.log(`Token ${token}`);
-            if (token.type == TOKENTYPE_COMMENT_ML_END) {
-               this.nextToken(); // Consume
-               break;
-            } else {
-               ret.text += ` ${this.nextToken().text}`;
-            }
-         } while (token != null && token.type != TOKENTYPE_EOF);
-         ret.text = ret.text.trim();
-         this.log(`Accepted mlcomment`);
-         return ret;
-      } finally {
-         this.popContext();
-      }
-   }
+   
 
    /**
     * Method that interprets a type with or without generics
@@ -330,23 +217,31 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
             }
          }
          this.nextToken();
+         this.ignoreComments();
       }
       return ret;
    }
 
    private doParameter(): ApexParameterIR {
+      this.logger.info(`Doing parameter on ${this.lookAhead()}`);
       let ret: ApexParameterIR | undefined;
       this.pushContext(ParseContext.PARAM);
+      let isFinal:boolean = false;
       try {
+         let token: Token = this.lookAhead();
+         if (token.type === TOKENTYPE_CODE_RESERVEDWORD && token.ltext == WORD_FINAL) {
+            isFinal = true;
+            this.nextToken();
+            token = this.lookAhead();
+         }
          let type: ApexTypeIR = this.doType();
-         const token: Token = this.lookAhead();
          if (token.type !== TOKENTYPE_CODE_WORD) {
             this.log(
                `Problem reading parameter. Expected name of parameter but found ${token}`
             );
             throw this.failedAttemptError;
          }
-         ret = new ApexParameterIR(token.text, type);
+         ret = new ApexParameterIR(token.text, type, isFinal);
          this.nextToken();
          this.log(`Read parameter: ${ret}`);
          return ret;
@@ -358,7 +253,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
    private doMethodBody(method: ApexMethodIR): void {
       this.pushContext(ParseContext.METHODBODY);
       try {
-         this.log(`Doing method body`);
+         this.log(`Doing method body on ${this.lookAhead()}`);
          let nesting: number = 0;
 
          let comments: CommentIR[] = [];
@@ -373,13 +268,9 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
          this.nextToken();
          token = this.lookAhead();
          while (true) {
-            if (this.attempt("mlComment", this.doMLComment)) {
-               comments.push(this.doMLComment());
-            } else if (this.attempt("jdComment", this.doJDComment)) {
-               jdComment = this.doJDComment();
-               comments.push(jdComment);
-            } else if (token.type === TOKENTYPE_CODE_CBRACKET_END) {
+            if (token.type === TOKENTYPE_CODE_CBRACKET_END) {
                nesting--;
+               this.log(`Method body nest depth decremented: ${nesting}`);
                this.nextToken();
                if (nesting < 0) {
                   // We start with nesting 0 and the end one is the closing one that was not counted in the nesting level
@@ -387,7 +278,13 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
                }
             } else if (token.type === TOKENTYPE_CODE_CBRACKET_START) {
                nesting++;
+               this.log(`Method body nest depth incremented: ${nesting}`);
                this.nextToken();
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_ML_START && this.attempt("mlComment", this.doMLComment)) {
+               comments.push(this.doMLComment());
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("jdComment", this.doJDComment)) {
+               jdComment = this.doJDComment();
+               comments.push(jdComment);
             } else if (token.type === TOKENTYPE_EOF) {
                this.log(`Error: Reached end of file reading method body`);
                throw this.failedAttemptError;
@@ -400,7 +297,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
             token = this.lookAhead();
          }
          method.endLine = token.line;
-         this.log(`Next token after method body: ${this.lookAhead()}`);
+         this.log(`Accepted method body: ${this.lookAhead()}`);
       } finally {
          this.popContext();
       }
@@ -541,7 +438,13 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
                this.log(
                   `Expected closing bracket ")" or "," for method definition but found "${token}"`
                );
-               throw this.failedAttemptError;
+               // At this point this means fatal error interpreting it
+               throw new ParserError(`Expected closing bracket ")" or "," for method definition but found "${token}"`,
+                  token.line,
+                  token.offset,
+                  CODE_MALFORMED
+               );
+               // throw this.failedAttemptError;
             }
             guard++;
             if (guard > 100) {
@@ -706,18 +609,18 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
          let nesting: number = 0;
          let maxNesting: number = 0;
          while (token.type !== TOKENTYPE_EOF) {
-            if (this.attempt("jdcomment", this.doJDComment)) {
+            if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("jdcomment", this.doJDComment)) {
                this.doJDComment();
-            } else if (this.attempt("mlcomment", this.doMLComment)) {
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_ML_START && this.attempt("mlcomment", this.doMLComment)) {
                this.doMLComment();
-            } else if (token.type === TOKENTYPE_CODE_CBRACKET_END) {
+            } else if (this.lookAhead().type === TOKENTYPE_CODE_CBRACKET_END) {
                nesting--;
                if (nesting < 0) {
                   break;
                }
                this.nextToken();
                token = this.lookAhead();
-            } else if (token.type === TOKENTYPE_CODE_CBRACKET_START) {
+            } else if (this.lookAhead().type === TOKENTYPE_CODE_CBRACKET_START) {
                nesting++;
                if (maxNesting < nesting) {
                   maxNesting = nesting;
@@ -809,9 +712,9 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
          let jdComment: JDCommentIR | undefined;
          let comments: CommentIR[] = [];
          while (goOn) {
-            if (this.attempt("jdComment", this.doJDComment)) {
+            if (this.lookAhead().type === TOKENTYPE_COMMENT_ML_START && this.attempt("jdComment", this.doJDComment)) {
                jdComment = this.doJDComment();
-            } else if (this.attempt("comment", this.doMLComment)) {
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("comment", this.doMLComment)) {
                comments.push(this.doMLComment());
             } else {
                goOn = false;
@@ -939,7 +842,7 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
             }
          }
          const annotations: ApexAnnotationIR[] = [];
-         while (this.attempt("constructorAnnotation", this.doApexAnnotation)) {
+         while (this.attempt("attributeAnnotation", this.doApexAnnotation)) {
             annotations.push(this.doApexAnnotation());
          }
          let token: Token = this.lookAhead();
@@ -1004,10 +907,10 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
                token = this.lookAhead();
             }
          }
-         token = this.lookAhead();
          if (token.type == TOKENTYPE_CODE_SEMICOLON) {
             this.nextToken();
          }
+         this.log(`Accepted attribute`);
          return ret;
       } finally {
          this.popContext();
@@ -1058,9 +961,9 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
                classIR.enums.push(this.doEnum());
             } else if (this.attempt("comment", this.doMLComment)) {
                this.doMLComment(); // Ignored
-            } else if (this.attempt("jdComment", this.doJDComment)) {
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("jdComment", this.doJDComment)) {
                this.doJDComment(); // Ignored (and not really normal)
-            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_SL) {
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.lookAhead().type === TOKENTYPE_COMMENT_SL) {
                this.nextToken(); // Ignore lost inline comments
             } else {
                throw new ParserError(
@@ -1102,10 +1005,10 @@ export default class ApexClassParser extends Parser<ApexToken, ApexIR> {
          const annotations: ApexAnnotationIR[] = [];
 
          while (preClassItems) {
-            if (this.attempt("jdComment", this.doJDComment)) {
+            if (this.lookAhead().type === TOKENTYPE_COMMENT_JD_START && this.attempt("jdComment", this.doJDComment)) {
                jdComment = this.doJDComment(); // Always keep latest javadoc comment
                comments.push(jdComment);
-            } else if (this.attempt("mlComment", this.doMLComment)) {
+            } else if (this.lookAhead().type === TOKENTYPE_COMMENT_ML_START && this.attempt("mlComment", this.doMLComment)) {
                comments.push(this.doMLComment());
             } else if (token.type === TOKENTYPE_COMMENT_SL) {
                const comment: CommentIR = new CommentIR();

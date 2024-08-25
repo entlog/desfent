@@ -5,5 +5,7 @@
  */
 export enum RootNature {
    ApexClass = 'ApexClass',
-   ApexEnum = 'ApexEnum'
+   ApexEnum = 'ApexEnum',
+   ApexTrigger = 'ApexTrigger',
+   Unknown = 'Unknown'
 }

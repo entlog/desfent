@@ -1,17 +1,20 @@
 import ApexClassParser from "./parser/ApexClassParser.js";
 import { Logger } from "@salesforce/core";
 import Lexer, { Token } from "./lexer/Lexer.js";
-import ApexClassLexer from "./lexer/ApexClassLexer.js";
+import ApexClassLexer from "./lexer/ApexLexer.js";
 import Stream from "./lexer/Stream.js";
 import { Parser } from "./parser/Parser.js";
 import IR from "./ir/IR.js";
 import ParserError from "./error/ParserError.js";
+import ApexTriggerParser from "./parser/ApexTriggerParser.js";
 
 export enum ResourceType {
   APEXCLASS = "ApexClass",
+  APEXTRIGGER = "ApexTrigger"
 }
 const EXT2PARSER: Map<String, ResourceType> = new Map<String, ResourceType>([
   [".cls", ResourceType.APEXCLASS],
+  [".trigger", ResourceType.APEXTRIGGER],
 ]);
 
 export default class TechFactory {
@@ -45,6 +48,8 @@ export default class TechFactory {
     
     if (type == ResourceType.APEXCLASS) {
       return new ApexClassParser(lexer, logger);
+    } else if (type === ResourceType.APEXTRIGGER) {
+      return new ApexTriggerParser(lexer, logger);
     }
     return undefined;
   }
@@ -58,7 +63,7 @@ export default class TechFactory {
     const logger: Logger = await Logger.child("Lexer");
     logger.info("Testing");
     // logger.setLevel(LoggerLevel.DEBUG);
-    if (type === ResourceType.APEXCLASS) {
+    if (type === ResourceType.APEXCLASS || type === ResourceType.APEXTRIGGER) {
       return new ApexClassLexer(filePath, stream, logger);
     } else {
       throw new Error("Invalid");

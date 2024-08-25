@@ -102,6 +102,7 @@ const TOKEN_AFTER = "after";
 const TOKEN_INSERT = "insert";
 const TOKEN_UPDATE = "update";
 const TOKEN_DELETE = "delete";
+const TOKEN_UNDELETE = "undelete";
 
 const APEX_RESERVEDWORDS: string[] = [
   "public",
@@ -119,12 +120,14 @@ const APEX_RESERVEDWORDS: string[] = [
   "enum",
   "override",
   "extends",
+  "final",
   TOKEN_TRIGGER,
   TOKEN_BEFORE,
   TOKEN_AFTER,
   TOKEN_INSERT,
   TOKEN_UPDATE,
   TOKEN_DELETE,
+  TOKEN_UNDELETE,
   TOKEN_ON,
 ];
 export class ApexToken extends Token {}
@@ -134,7 +137,7 @@ const enum LexerContext {
   MLCOMMENT = "mlcomment",
 }
 
-export default class ApexClassLexer extends Lexer<ApexToken> {
+export default class ApexLexer extends Lexer<ApexToken> {
   lexerContext: LexerContext = LexerContext.CODE;
 
   eofToken: ApexToken = new ApexToken(

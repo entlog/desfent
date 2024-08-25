@@ -18,6 +18,14 @@ export const WORD_IMPLEMENTS: string = "implements";
 export const WORD_TESTMETHOD: string = "testmethod";
 export const WORD_OVERRIDE: string = "override";
 export const WORD_ENUM: string = "enum";
+export const WORD_TRIGGER: string = "trigger";
+export const WORD_ON: string = "on";
+export const WORD_BEFORE: string = "before";
+export const WORD_AFTER: string = "after";
+export const WORD_INSERT: string = "insert";
+export const WORD_UPDATE: string = "update";
+export const WORD_DELETE: string = "delete";
+export const WORD_UNDELETE: string = "undelete";
 
 export const APX_ANNOTATION_ISTEST: string = "@isTest";
 export const JD_ANNOTATION_PARAM: string = "@param";
